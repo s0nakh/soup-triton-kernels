@@ -160,7 +160,7 @@ python harness/check_rules.py                      # проверки → runs/c
 
 **MindStream AI** — соло-участник: **Sonia Akhsen**, капитан команды · Актау
 
-AI-инструменты в разработке: [Claude Code](https://claude.com/claude-code) с open-source плагином [ECC](https://github.com/affaan-m/ECC) — разрешено п. 5.4.10 Положения и разделом 8 ТЗ.
+Разработка велась с AI-ассистентом [Claude Code](https://claude.com/claude-code).
 
 ## 📄 Лицензия
 
