@@ -160,9 +160,15 @@ def fp16_weight(weight):
     return cached
 
 
-def fused_head_loss(hidden, weight, labels, num_items_in_batch=None):
-    """(loss, HeadStep) for a causal LM head, matching ForCausalLMLoss's reduction."""
+def fused_head_loss(hidden, weight, labels, num_items_in_batch=None, pack=None):
+    """(loss, HeadStep) for a causal LM head, matching ForCausalLMLoss's reduction.
+
+    With `pack` (see unpad.py) `hidden` holds only the real tokens, (1, n_real, width); the
+    targets are shifted in the padded layout first, so no row borrows another row's token, and
+    the per-position outputs go back to (batch, seq) with zeros at the pad positions."""
     targets = shift_labels(labels)
+    if pack is not None:
+        targets = pack.pack(targets)
     if num_items_in_batch is None:
         divisor = (targets != IGNORE_INDEX).sum().clamp(min=1).to(torch.float32)
     elif torch.is_tensor(num_items_in_batch):
@@ -171,5 +177,7 @@ def fused_head_loss(hidden, weight, labels, num_items_in_batch=None):
         divisor = torch.tensor(float(num_items_in_batch), device=hidden.device)
     loss, entropy, token_loss, correct, labelled = FusedHeadLoss.apply(
         hidden, fp16_weight(weight), targets, divisor)
+    if pack is not None:
+        entropy, token_loss = pack.unpack(entropy), pack.unpack(token_loss)
     return loss, HeadStep(token_entropy=entropy, token_loss=token_loss, correct=correct,
                           labelled=labelled)

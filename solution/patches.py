@@ -12,6 +12,7 @@
 import torch
 
 from .head_loss import HeadStep, fused_head_loss
+from .unpad import make_pack, packing
 
 REWIND_STEP_ATTR = "_soup_chunked_step"  # soup_cli.utils.stream_loss_chunk.STEP_ATTR (0.77.0)
 _STEP = {"value": None}
@@ -46,11 +47,17 @@ def patch_qwen2_causal_lm():
                             position_ids=position_ids, past_key_values=past_key_values,
                             inputs_embeds=inputs_embeds, labels=labels, use_cache=use_cache,
                             logits_to_keep=logits_to_keep, **kwargs)
-        outputs = self.model(input_ids=input_ids, attention_mask=attention_mask,
-                             position_ids=position_ids, past_key_values=past_key_values,
-                             inputs_embeds=inputs_embeds, use_cache=use_cache, **kwargs)
-        loss, step = fused_head_loss(outputs.last_hidden_state, self.lm_head.weight, labels,
-                                     kwargs.get("num_items_in_batch"))
+        pack = (make_pack(attention_mask) if position_ids is None and past_key_values is None
+                and not use_cache else None)
+        with packing(pack):
+            outputs = self.model(input_ids=input_ids, attention_mask=attention_mask,
+                                 position_ids=position_ids, past_key_values=past_key_values,
+                                 inputs_embeds=inputs_embeds, use_cache=use_cache, **kwargs)
+        hidden = outputs.last_hidden_state
+        if pack is not None and tuple(hidden.shape[:2]) != (1, pack.n_real):
+            pack = None  # some layer did not run packed: the output is still padded
+        loss, step = fused_head_loss(hidden, self.lm_head.weight, labels,
+                                     kwargs.get("num_items_in_batch"), pack)
         _STEP["value"] = step
         return CausalLMOutputWithPast(loss=loss, logits=None,
                                       past_key_values=outputs.past_key_values,
