@@ -9,6 +9,8 @@ before Soup builds the model and the trainer.
 - `nf4.py`: our NF4 dequantization (Triton) for every 4-bit linear, forward and backward: absmax
   and weights rebuilt in one launch instead of bitsandbytes' two.
 - `rmsnorm.py`: fused Qwen2 RMSNorm forward and backward (Triton).
+- `rope.py`: fused attention prologue (Triton): LoRA merge + rotary embedding + fp16 cast for
+  q, k, v in one pass, forward and backward.
 - `mlp.py`: keeps the MLP's gate/up in fp16, the dtype its matmuls produce (same values).
 - `unpad.py`: drops the padding inside each batch: token-wise ops run on real tokens only,
   attention unpacks to the base's padded layout and mask.

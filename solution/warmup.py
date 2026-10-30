@@ -41,6 +41,20 @@ def _compile_all():
                               BLOCK=BYTES_PER_PROGRAM, BYTES_PER_ABSMAX=32, ABSMAX_PER_SCALE=256,
                               num_warps=NF4_WARPS, grid=(1,))
 
+    from .rope import qkv_prologue_bwd_kernel, qkv_prologue_fwd_kernel
+
+    qkv = torch.empty(16, HIDDEN, device=cuda, dtype=f16)
+    angles = torch.empty(16, 128, device=cuda, dtype=f32)
+    for has_lora, has_rope in ((True, True), (False, True), (True, False)):
+        table = angles if has_rope else qkv  # without rotary the kernel gets the base tensor
+        qkv_prologue_fwd_kernel.warmup(qkv, qkv, table, table, qkv, 12, HALF=64,
+                                       HAS_LORA=has_lora, HAS_ROPE=has_rope, num_warps=1,
+                                       grid=(1, 1))
+    for has_rope in (True, False):
+        table = angles if has_rope else qkv
+        qkv_prologue_bwd_kernel.warmup(qkv, table, table, qkv, 12, HALF=64, HAS_ROPE=has_rope,
+                                       num_warps=1, grid=(1, 1))
+
     logits = torch.empty(16, VOCAB, device=cuda, dtype=f16)
     labels = torch.empty(16, device=cuda, dtype=torch.int64)
     per_row = torch.empty(16, device=cuda, dtype=f32)

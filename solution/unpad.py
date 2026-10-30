@@ -33,10 +33,12 @@ class Pack:
         """(batch, seq, ...) -> (1, n_real, ...)"""
         return padded.reshape(self.batch * self.seq, *padded.shape[2:])[self.index].unsqueeze(0)
 
-    def unpack(self, packed):
-        """(1, n_real, ...) -> (batch, seq, ...) with zeros at the pad positions."""
+    def unpack(self, packed, fill_pads=True):
+        """(1, n_real, ...) -> (batch, seq, ...) with zeros at the pad positions (or, with
+        fill_pads=False, whatever the fresh memory holds: for consumers that ignore them)."""
         rows = packed.squeeze(0)
-        out = rows.new_zeros(self.batch * self.seq, *rows.shape[1:])
+        size = (self.batch * self.seq, *rows.shape[1:])
+        out = rows.new_zeros(size) if fill_pads else rows.new_empty(size)
         out[self.index] = rows
         return out.view(self.batch, self.seq, *rows.shape[1:])
 
@@ -94,20 +96,64 @@ def _packed_rotary(pack, position_embeddings):
     return tuple(pack.pack(t.expand(pack.batch, *t.shape[1:])) for t in (cos, sin))
 
 
+def _lora_adapter(proj):
+    """"" for a bare projection, the adapter name for a plain single-adapter peft LoRA layer, or
+    None for anything else. Decided before any dropout runs, so a fallback never draws twice."""
+    if getattr(proj, "base_layer", None) is None:
+        return ""
+    adapters = list(getattr(proj, "active_adapters", []) or [])
+    if (len(adapters) != 1 or getattr(proj, "disable_adapters", True)
+            or getattr(proj, "merged", True) or adapters[0] not in proj.lora_A
+            or adapters[0] in getattr(proj, "lora_variant", {})):
+        return None
+    return adapters[0]
+
+
+def _lora_parts(proj, adapter, x16, x32):
+    """(base output, LoRA delta or None) of a q/k/v projection, as peft computes them under
+    autocast: the base layer on the fp16 input, LoRA on the fp32 input through its dropout."""
+    if not adapter:
+        return proj(x16), None
+    lora = proj.lora_B[adapter](proj.lora_A[adapter](proj.lora_dropout[adapter](x32)))
+    return proj.base_layer(x16), lora * proj.scaling[adapter]
+
+
+def _fused_qkv(module, hidden_states, rotary):
+    """q, k, v as fp16 (tokens, heads * dim) from our fused LoRA + rotary + cast kernel, or None
+    to use the original ops."""
+    projections = (module.q_proj, module.k_proj, module.v_proj)  # peft's order: same dropout RNG
+    adapters = [_lora_adapter(p) for p in projections]
+    if (not torch.is_autocast_enabled("cuda") or hidden_states.dtype != torch.float32
+            or any(a is None for a in adapters)):
+        return None
+    from .rope import qkv_prologue
+
+    x16 = hidden_states.to(torch.float16)  # the cast every 4-bit layer makes inside, done once
+    tokens, dim = hidden_states.shape[1], module.head_dim
+    cos, sin = (t.reshape(tokens, -1) for t in rotary)
+    flat = []
+    for proj, adapter in zip(projections, adapters):
+        base, lora = _lora_parts(proj, adapter, x16, hidden_states)
+        flat.append((base.reshape(tokens, -1), None if lora is None else lora.reshape(tokens, -1)))
+    (qb, ql), (kb, kl), (vb, vl) = flat
+    return (qkv_prologue(qb, ql, cos, sin, dim), qkv_prologue(kb, kl, cos, sin, dim),
+            qkv_prologue(vb, vl, None, None, dim))
+
+
 def _attention_per_row(module, pack, query, key, value):
     """Causal attention row by row on the packed tokens: each row's real tokens are contiguous,
     so a plain causal mask on its own block is exactly the base's causal + padding mask for the
     real positions, with no work on padding and no copies into the padded layout."""
     from transformers.models.qwen2.modeling_qwen2 import repeat_kv
 
-    groups = module.num_key_value_groups
-    outputs, start = [], 0
-    for length in pack.lengths:
-        rows = slice(start, start + length)
-        outputs.append(torch.nn.functional.scaled_dot_product_attention(
-            query[:, :, rows], repeat_kv(key[:, :, rows], groups),
-            repeat_kv(value[:, :, rows], groups), is_causal=True, scale=module.scaling))
-        start += length
+    groups, lengths = module.num_key_value_groups, list(pack.lengths)
+    # split (not slicing): its backward is one concatenation, not a zero-filled copy per row
+    outputs = [
+        torch.nn.functional.scaled_dot_product_attention(
+            q, repeat_kv(k, groups), repeat_kv(v, groups), is_causal=True, scale=module.scaling)
+        for q, k, v in zip(query.split(lengths, dim=2), key.split(lengths, dim=2),
+                           value.split(lengths, dim=2))
+    ]
     return torch.cat(outputs, dim=2)
 
 
@@ -139,10 +185,14 @@ def patch_qwen2_unpadded():
             return attn_forward(self, hidden_states, position_embeddings, attention_mask,
                                 past_key_values=past_key_values, **kwargs)
         shape = (1, pack.n_real, -1, self.head_dim)
-        query = self.q_proj(hidden_states).view(shape).transpose(1, 2)
-        key = self.k_proj(hidden_states).view(shape).transpose(1, 2)
-        value = self.v_proj(hidden_states).view(shape).transpose(1, 2)
-        query, key = modeling_qwen2.apply_rotary_pos_emb(query, key, *rotary)
+        fused = _fused_qkv(self, hidden_states, rotary)
+        if fused is not None:
+            query, key, value = (t.view(shape).transpose(1, 2) for t in fused)
+        else:
+            query = self.q_proj(hidden_states).view(shape).transpose(1, 2)
+            key = self.k_proj(hidden_states).view(shape).transpose(1, 2)
+            value = self.v_proj(hidden_states).view(shape).transpose(1, 2)
+            query, key = modeling_qwen2.apply_rotary_pos_emb(query, key, *rotary)
 
         if pack.lengths and self.sliding_window is None and getattr(self, "is_causal", True):
             output = _attention_per_row(self, pack, query, key, value)
@@ -164,7 +214,8 @@ def patch_qwen2_unpadded():
         pack = active_pack()
         if pack is None or not self.training or self.p == 0 or not _is_packed(pack, input):
             return dropout_forward(self, input)
-        return pack.pack(dropout_forward(self, pack.unpack(input)))
+        # the mask does not depend on the values, and pad positions are dropped again right after
+        return pack.pack(dropout_forward(self, pack.unpack(input, fill_pads=False)))
 
     for fn in (decoder_layer, attention, dropout):
         fn._mindstream = True
