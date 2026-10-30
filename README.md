@@ -54,6 +54,8 @@
 
 **Все 10 проверок `check_rules.py` — PASS.** 31 наш тест кернелов и 79 регрессионных тестов Soup проходят. Разброс замеров на T4 между прогонами — 1–4 %, поэтому округляем: **≈ 1,5× быстрее, ≈ 4,3× меньше памяти**.
 
+📓 **Публичный ноутбук Kaggle** по шаблону организаторов (`COMMIT = "b1c97d9"`, по 1 запуску на сторону): [сохранённая версия](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) — база 95,7 с → **64,1 с (1,49×)**, 14 345 → **3 329 МиБ (4,31×)**, eval loss 2,04969 → 2,04965 (−0,002 %), доля наших кернелов 10,1 %, **ALL CHECKS PASSED**. Секунды на этой машине Kaggle больше, а отношения те же.
+
 ### 🎯 Отчёт о точности: результат обучения не изменился
 
 Пошаговые метрики из `trainer_state.json` и `rewind.jsonl` (64 шага, 256 строк). Справа — насколько база отличается **сама от себя** при повторном запуске на той же T4:
@@ -119,7 +121,7 @@
 3. В первой ячейке: `REPO_URL = "https://github.com/BAITC-Hacks/hack-65172d00-mindstream-ai.git"`, `COMMIT = "<финальный коммит из SUBMISSION.md>"`.
 4. **Run All** (~10 минут): база и решение, `runs/result.json`, таблица проверок.
 
-📓 Публичный ноутбук с результатами: ⏳ ссылка появится перед сдачей (и в [`SUBMISSION.md`](./SUBMISSION.md)).
+📓 Публичный ноутбук с результатами: [www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) (и в [`SUBMISSION.md`](./SUBMISSION.md)).
 
 **Локально (Linux + CUDA GPU):**
 
@@ -213,7 +215,7 @@ Apache-2.0, см. [`LICENSE`](./LICENSE) и [`NOTICE`](./NOTICE). Шаблон, 
 | GPU жадының шыңы | 14 345 МиБ | **3 329 МиБ** | **≈ 4,31×** |
 | Адаптердің eval loss-ы | 2,04966 | 2,04962 | −0,002 % |
 
-`check_rules.py`-дің барлық 10 тексерісі — PASS. Дәлдік есебі [жоғарыда](#-отчёт-о-точности-результат-обучения-не-изменился): біздің базадан айырмашылығымыз базаның өзінің қайта іске қосулар арасындағы шашырауымен бірдей.
+`check_rules.py`-дің барлық 10 тексерісі — PASS. Ұйымдастырушылар үлгісі бойынша жария Kaggle ноутбугы: [сақталған нұсқа](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) — 95,7 с → 64,1 с (1,49×), 14 345 → 3 329 МиБ (4,31×), ALL CHECKS PASSED. Дәлдік есебі [жоғарыда](#-отчёт-о-точности-результат-обучения-не-изменился): біздің базадан айырмашылығымыз базаның өзінің қайта іске қосулар арасындағы шашырауымен бірдей.
 
 ### ⚙️ Не істелді
 
@@ -253,7 +255,7 @@ Cut Cross-Entropy (Wijmans et al., 2024), Liger-Kernel, online softmax (Milakov 
 | Peak GPU memory | 14,345 MiB | **3,329 MiB** | **≈ 4.31×** |
 | Adapter eval loss | 2.04966 | 2.04962 | −0.002 % |
 
-All 10 checks of `check_rules.py` pass. The accuracy report is [above](#-отчёт-о-точности-результат-обучения-не-изменился): our difference from the base is the same size as the base's difference from itself between runs (loss 0.012 % vs 0.009 % mean per step).
+All 10 checks of `check_rules.py` pass. Public Kaggle notebook from the organizers' template: [saved version](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) — 95.7 s → 64.1 s (1.49×), 14,345 → 3,329 MiB (4.31×), ALL CHECKS PASSED. The accuracy report is [above](#-отчёт-о-точности-результат-обучения-не-изменился): our difference from the base is the same size as the base's difference from itself between runs (loss 0.012 % vs 0.009 % mean per step).
 
 ### ⚙️ What we built
 

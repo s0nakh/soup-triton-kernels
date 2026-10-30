@@ -1,9 +1,10 @@
 # Submission: MindStream AI
 
 ## Links
-- Repository, final commit: ⏳ https://github.com/BAITC-Hacks/hack-65172d00-mindstream-ai/commit/<final sha>
+- Repository, final commit: https://github.com/BAITC-Hacks/hack-65172d00-mindstream-ai/commit/b1c97d9ca02276b955732f38699bc868ccf8d3d1
+  (the code; later commits only add links to this file and the README)
 - Public Kaggle notebook, the saved version (`COMMIT` in it = the sha above; the same link is in
-  the README): ⏳ https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=<version>
+  the README): https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217
 - Demo video (up to 3 minutes): ⏳
 - Presentation: ⏳
 
@@ -31,14 +32,26 @@ Ideas taken from other kernels, with links (we wrote the code ourselves):
 - Rotary embedding — J. Su et al., *RoFormer*, 2021: https://arxiv.org/abs/2104.09864
 - Fusing LoRA with neighbouring ops and recomputing activations in own code — Unsloth (https://unsloth.ai/blog/long-context), Axolotl (https://docs.axolotl.ai/docs/lora_optims.html)
 
-## Results on Kaggle T4 (from `runs/result.json` and `runs/checks.json`, 2 runs per side)
+## Results on Kaggle T4
+
+The saved public notebook above (organizers' template, `COMMIT = "b1c97d9"`, 1 run per side):
+
+| | Base Soup | Ours | Ratio |
+|---|---|---|---|
+| Time of `soup train`, s | 95.7 | 64.1 | speedup ≈ 1.49 x |
+| Peak GPU memory, MiB | 14,345 | 3,329 | base/ours ≈ 4.31 x |
+| Eval loss (public rows) | 2.04969 | 2.04965 | −0.002 % vs base |
+| Own kernels, share of the training time | | 10.1 % | threshold 5 % |
+
+ALL CHECKS PASSED (10/10).
+
+Our development run with `harness/run_task.py --repeats 2` (2 runs per side, means):
+
 | | Base Soup | Ours | Ratio |
 |---|---|---|---|
 | Time of `soup train`, s | 83.5 | 55.5 | speedup ≈ 1.50 x |
 | Peak GPU memory, MiB | 14,345 | 3,329 | base/ours ≈ 4.31 x |
 | Eval loss (public rows) | 2.04966 | 2.04962 | −0.002 % vs base |
-
-⏳ Final numbers will be taken from the saved public notebook above.
 
 - [x] All 10 checks of `harness/check_rules.py` passed
 - [x] README.md rewritten for our solution: what we did, how to run it, results, limits
