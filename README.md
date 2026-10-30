@@ -191,7 +191,7 @@ python harness/check_rules.py                      # проверки → runs/c
 
 **MindStream AI** — соло-участник: **Sonia Akhsen**, капитан команды · Актау
 
-Разработка велась с AI-ассистентом [Claude Code](https://claude.com/claude-code).
+Разработка велась с AI-ассистентом [Claude Code](https://claude.com/claude-code). Озвучка демо-видео — [ElevenLabs](https://elevenlabs.io) (бесплатный тариф), голос Victoriya Voloshina — Curious Educator.
 
 ## 📄 Лицензия
 
@@ -237,6 +237,8 @@ Cut Cross-Entropy (Wijmans et al., 2024), Liger-Kernel, online softmax (Milakov 
 
 **MindStream AI** — жеке қатысушы: **Sonia Akhsen**, команда капитаны · Ақтау
 
+Демо-бейненің дыбысы — [ElevenLabs](https://elevenlabs.io) (тегін тариф), Victoriya Voloshina — Curious Educator дауысы.
+
 </details>
 
 <a id="en"></a>
@@ -276,5 +278,7 @@ Cut Cross-Entropy (Wijmans et al., 2024), Liger-Kernel, online softmax (Milakov 
 ### 👤 Team
 
 **MindStream AI** — solo participant: **Sonia Akhsen**, team captain · Aktau, Kazakhstan
+
+Demo video voiceover: [ElevenLabs](https://elevenlabs.io) (free plan), voice Victoriya Voloshina — Curious Educator.
 
 </details>

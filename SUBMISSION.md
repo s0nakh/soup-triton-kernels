@@ -5,7 +5,7 @@
   (the code; later commits only add links to this file and the README)
 - Public Kaggle notebook, the saved version (`COMMIT` in it = the sha above; the same link is in
   the README): https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217
-- Demo video (up to 3 minutes): ⏳
+- Demo video (up to 3 minutes): ⏳ (voiceover: ElevenLabs free plan, voice Victoriya Voloshina — Curious Educator)
 - Presentation: ⏳
 
 ## Team (up to 4 people)
