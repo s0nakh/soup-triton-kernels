@@ -3,7 +3,7 @@
 <h1 align="center">Soup Kernel Challenge · свои Triton-кернелы для Soup</h1>
 
 <p align="center">
-  <em>Быстрее и легче то же самое обучение Qwen2.5-1.5B на бесплатной Kaggle T4 — без изменения результата</em>
+  <em>То же обучение Qwen2.5-1.5B на бесплатной Kaggle T4: ≈1,5× быстрее, ≈4,3× меньше памяти, тот же результат</em>
 </p>
 
 <p align="center">
@@ -14,7 +14,10 @@
   <img src="https://img.shields.io/badge/GPU-Kaggle_T4_(fp16)-20BEFF?style=for-the-badge&logo=kaggle&logoColor=white" alt="Kaggle T4" />
   <img src="https://img.shields.io/badge/soup--cli-0.77.0-F59E0B?style=for-the-badge" alt="soup-cli 0.77.0" />
   <img src="https://img.shields.io/badge/Python-3.13-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.13" />
-  <a href="./solution/test_head_loss.py"><img src="https://img.shields.io/badge/Kernel_tests-pytest-brightgreen?style=for-the-badge&logo=pytest&logoColor=white" alt="Kernel tests" /></a>
+  <a href="#-тесты"><img src="https://img.shields.io/badge/Kernel_tests-31_passed-brightgreen?style=for-the-badge&logo=pytest&logoColor=white" alt="Kernel tests" /></a>
+  <img src="https://img.shields.io/badge/Rule_checks-10%2F10_PASS-brightgreen?style=for-the-badge" alt="10/10 checks" />
+  <img src="https://img.shields.io/badge/Speed-%E2%89%881.5%C3%97-7C3AED?style=for-the-badge" alt="Speed 1.5x" />
+  <img src="https://img.shields.io/badge/Memory-%E2%89%884.3%C3%97_less-0EA5E9?style=for-the-badge" alt="Memory 4.3x less" />
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue?style=for-the-badge" alt="Apache-2.0" /></a>
 </p>
 
@@ -33,24 +36,38 @@
 
 ## 💡 Коротко
 
-`soup train` дообучает **Qwen2.5-1.5B-Instruct** (веса NF4, LoRA r=16) на 256 инструкциях на казахском языке на одной Kaggle T4. В базе это около 80 с и около 14,35 ГБ видеопамяти. Наши Triton-кернелы подключаются к Soup одной функцией `solution.apply()`: та же задача, тот же адаптер того же качества — но меньше памяти и времени.
-
-> **Статус:** идёт разработка (30–31 октября 2026). Цифры ниже обновляются после каждого прогона на Kaggle T4.
+`soup train` дообучает **Qwen2.5-1.5B-Instruct** (веса NF4, LoRA r=16) на 256 инструкциях на казахском языке на одной Kaggle T4. В базе это ≈ 84 с и 14,3 ГБ видеопамяти — почти вся карта. Наши Triton-кернелы подключаются одной функцией `solution.apply()`, без единого встроенного режима Soup: **то же обучение идёт ≈ 1,5× быстрее и занимает ≈ 4,3× меньше памяти (3,3 ГБ — помещается даже в видеокарту на 4 ГБ)**, а метрики совпадают с базой в пределах её собственного разброса между запусками.
 
 ---
 
 ## 📊 Результаты
 
-Замер — официальные скрипты `harness/run_task.py` и `harness/check_rules.py` на Kaggle T4.
+Официальные скрипты `harness/run_task.py --repeats 2` и `harness/check_rules.py` на Kaggle T4 (база и решение по 2 запуска, как у жюри; средние):
 
-| | База Soup 0.77.0 | Наше решение | Отношение |
+| | База Soup 0.77.0 | MindStream AI | Отношение |
 |---|---|---|---|
-| Время `soup train` | ⏳ | ⏳ | s = ⏳ |
-| Пик памяти GPU (nvidia-smi) | ⏳ | ⏳ | m = ⏳ |
-| Eval loss адаптера | ⏳ | ⏳ | Δ = ⏳ |
-| Доля наших кернелов во времени обучения | — | ⏳ | нужно ≥ 5% |
+| Время `soup train` (от запуска до адаптера) | 83,5 с | **55,5 с** | **s ≈ 1,50×** |
+| Из них цикл обучения (64 шага) | 57,3 с | **33,2 с** | 1,73× |
+| Пик памяти GPU (nvidia-smi) | 14 345 МиБ | **3 329 МиБ** | **m ≈ 4,31×** |
+| Eval loss адаптера (строки 40000–40255) | 2,04966 | 2,04962 | **−0,002 %** |
+| Доля наших кернелов во времени обучения | — | **10,5 %** | порог 5 % |
 
-Проверки правил (`check_rules.py`): ⏳ после прогона.
+**Все 10 проверок `check_rules.py` — PASS.** 31 наш тест кернелов и 79 регрессионных тестов Soup проходят. Разброс замеров на T4 между прогонами — 1–4 %, поэтому округляем: **≈ 1,5× быстрее, ≈ 4,3× меньше памяти**.
+
+### 🎯 Отчёт о точности: результат обучения не изменился
+
+Пошаговые метрики из `trainer_state.json` и `rewind.jsonl` (64 шага, 256 строк). Справа — насколько база отличается **сама от себя** при повторном запуске на той же T4:
+
+| Метрика | Наше vs база: макс / среднее | База vs база (шум T4) | Допуск правил |
+|---|---|---|---|
+| Loss по шагам | 0,058 % / 0,012 % | 0,030 % / 0,009 % | 3 % |
+| Энтропия (лог TRL) | 0,064 % / 0,012 % | 0,038 % / 0,010 % | 3 % |
+| Точность токенов (лог TRL) | 0,85 % / 0,12 % | 0,95 % / 0,12 % | 3 % |
+| Loss строк в `rewind.jsonl` | 0,45 % / 0,04 % | 0,34 % / 0,03 % | 3 % |
+| Loss первого шага | 0,001 % | — | 1 % |
+| Число токенов по шагам | совпадает | — | равенство |
+
+Наше отличие от базы — того же порядка, что и разброс базы между запусками. Часть оптимизаций точна **бит в бит** (fp16-эмбеддинги, fp16 в MLP, распаковка NF4), остальные меняют только порядок суммирования в fp32. Маски dropout в LoRA — те же самые, что в базе.
 
 ---
 
@@ -58,36 +75,36 @@
 
 ## ⚙️ Что сделано
 
-### 1. Слитая cross-entropy по словарю из 151 936 токенов — [`solution/head_loss.py`](./solution/head_loss.py)
+Профиль базового шага на T4: матричные умножения ~36 %, мелкие поэлементные операции и приведения типов ~44 %, softmax по словарю ~7 %. Мы атаковали всё, что не является самим умножением, и убрали лишнюю работу на паддинг.
 
-**Проблема.** База держит в памяти полные логиты `(batch, seq, 151 936)`: fp16 после LM head, fp32-копию для loss, их градиент, `.contiguous()`-копию для точности в TRL и ещё раз считает cross-entropy по строкам для журнала `rewind.jsonl` Soup. Это несколько гигабайт на шаг.
+### Наши Triton-кернелы (`@triton.jit` в `solution/`)
 
-**Решение.** Токены идут кусками по 512:
+| Кернел | Файл | Что заменяет | Идея |
+|---|---|---|---|
+| `head_ce_stats_grad_kernel` | [`head_loss.py`](./solution/head_loss.py) | полные логиты `(batch, seq, 151 936)`: fp32-копию для loss, градиент, копию для точности TRL, пересчёт loss строк для rewind | один проход по куску логитов: online log-sum-exp, логит цели, энтропия, argmax; градиент `softmax − one_hot` пишется на место. Полные логиты не существуют |
+| `nf4_dequant_kernel` | [`nf4.py`](./solution/nf4.py) | два CUDA-кернела bitsandbytes (распаковка absmax и весов NF4) в каждом forward и backward | за один запуск: восстанавливает двойное квантование absmax на лету и распаковывает 4-битные коды в fp16 |
+| `rmsnorm_fwd_kernel`, `rmsnorm_bwd_kernel` | [`rmsnorm.py`](./solution/rmsnorm.py) | 6 отдельных операций Qwen2RMSNorm в forward и ~12 в backward | одна программа на строку, хранит для backward только `1/rms` строки |
+| `qkv_prologue_fwd_kernel`, `qkv_prologue_bwd_kernel` | [`rope.py`](./solution/rope.py) | цепочка вокруг q/k/v: каст в fp32, `clone`, сложение с LoRA, 6 операций RoPE, каст обратно в fp16 | сложение base + LoRA и поворот RoPE в регистрах за один проход, тот же порядок округления, что у базы |
 
-```text
- hidden (fp32) ──► кусок 512 токенов ──► logits = h16 @ W16ᵀ   (тот же fp16-matmul, что в базе)
-                                            │
-                     ┌──────────────────────┴───────────────────────┐
-                     │ Triton: head_ce_stats_grad_kernel (1 строка = 1 программа)
-                     │  проход 1: online log-sum-exp, логит цели, Σp·z (энтропия), argmax
-                     │  проход 2: на месте пишет softmax − one_hot (градиент)
-                     └──────────────────────┬───────────────────────┘
-                                            ▼
-                     dH = grad @ W16  (только строки с метками) → хранится до backward
-```
+### Как ещё мы убрали лишнюю работу и память
 
-- Полные логиты **никогда не существуют**: живёт только кусок (~155 МБ) и градиент скрытых состояний `(токены × 1536)`.
-- Один проход даёт всё, что нужно потребителям: loss для обучения, энтропию и точность для лога TRL, loss каждой строки для `rewind.jsonl` Soup. Формулы взяты из исходников TRL 0.29.1 и Soup 0.77.0 без изменений.
-- Градиент считается ещё в прямом проходе, поэтому backward не пересчитывает логиты.
-- Подключение: [`solution/patches.py`](./solution/patches.py) — патч `Qwen2ForCausalLM.forward` (только обучающий шаг на CUDA) и `trl.SFTTrainer.compute_loss` (логирование метрик). Во всех остальных случаях работает оригинальный код.
+| Приём | Файл | Эффект |
+|---|---|---|
+| **Удаление паддинга внутри батча** | [`unpad.py`](./solution/unpad.py) | реальные токены упаковываются после эмбеддинга; нормы, проекции, MLP и голова работают только по ним. Внимание — по каждой строке отдельно с causal-маской (реальные токены строки идут подряд), что совпадает с маской базы. Строки разных батчей не смешиваются |
+| **Те же маски dropout** | [`unpad.py`](./solution/unpad.py) | dropout LoRA тянет случайные числа на развёрнутом тензоре той же формы, что в базе, поэтому маски совпадают |
+| **fp16-эмбеддинги бит в бит** | [`tied_embedding.py`](./solution/tied_embedding.py) | на T4 Soup грузит модель в fp16, а PEFT поднимает общую матрицу эмбеддингов/LM head до fp32 — без новых битов информации. Храним её в fp16 (с проверкой точности) и возвращаем fp32 при поиске: −0,9 ГБ |
+| **fp16 в MLP** | [`mlp.py`](./solution/mlp.py) | bitsandbytes возвращает результат 4-битного умножения в fp32, и gate/up хранились в fp32. Один каст входа в fp16 даёт те же значения вдвое компактнее: −2 ГБ |
+| **Пересчёт MLP только для больших батчей** | [`mlp.py`](./solution/mlp.py) | пик памяти задаёт самый большой батч; для батчей > 800 реальных токенов gate/up не хранятся, а пересчитываются в backward нашим NF4-кернелом. Остальные батчи идут на полной скорости |
+| **Фоновая компиляция** | [`warmup.py`](./solution/warmup.py) | наши кернелы компилируются в отдельном потоке, пока Soup загружает модель (кэши при каждом запуске пустые, как требуют правила) |
+| **Метрики TRL и rewind Soup без логитов** | [`patches.py`](./solution/patches.py) | энтропия, точность, `num_tokens` и loss строк считаются в нашем кернеле по формулам TRL 0.29.1 и Soup 0.77.0 |
 
-### 2. Пример организаторов SwiGLU — [`solution/swiglu.py`](./solution/swiglu.py)
+Пример организаторов SwiGLU ([`swiglu.py`](./solution/swiglu.py)) оставлен включённым и в наши кернелы **не засчитывается**.
 
-Оставлен включённым (минус ~2 ГБ). **В наши кернелы не засчитывается** — так требуют правила.
+### Что мы попробовали и отказались (по замерам на T4)
 
-### ⏳ Следующие кернелы
-
-Выбираются по профилю `--profile` с T4: распаковка NF4, слитый RMSNorm, поэлементные операции (44% времени шага по профилю организаторов).
+- Пересчёт MLP для **всех** батчей: память −1,2 ГБ, но шаг на 23 % медленнее — по баллам невыгодно.
+- Пересчёт «под бюджет» по числу слоёв: пик памяти оказался выше, чем у простого порога.
+- Прогрев кернелов-примеров SwiGLU: первый шаг не ускорился — его время уходит на первую загрузку CUDA/cuBLAS-кернелов, а не на Triton.
 
 ---
 
@@ -98,11 +115,11 @@
 **Kaggle (так проверяет жюри):**
 
 1. Kaggle → **Create → New Notebook → File → Import Notebook** → [`templates/kaggle_notebook.ipynb`](./templates/kaggle_notebook.ipynb).
-2. Справа: **Accelerator: GPU T4 x2**, **Internet: On** (аккаунт с подтверждённым телефоном).
-3. В первой ячейке: `REPO_URL = "https://github.com/BAITC-Hacks/hack-65172d00-mindstream-ai.git"`, `COMMIT = "⏳ финальный коммит"`.
+2. Справа: **Accelerator: GPU T4 x2**, **Internet: On**. Для приватного репозитория — секрет `GITHUB_TOKEN` (Add-ons → Secrets).
+3. В первой ячейке: `REPO_URL = "https://github.com/BAITC-Hacks/hack-65172d00-mindstream-ai.git"`, `COMMIT = "<финальный коммит из SUBMISSION.md>"`.
 4. **Run All** (~10 минут): база и решение, `runs/result.json`, таблица проверок.
 
-📓 Публичный ноутбук с результатами: ⏳ ссылка появится перед сдачей.
+📓 Публичный ноутбук с результатами: ⏳ ссылка появится перед сдачей (и в [`SUBMISSION.md`](./SUBMISSION.md)).
 
 **Локально (Linux + CUDA GPU):**
 
@@ -110,9 +127,9 @@
 pip install "soup-cli[train]==0.77.0" "transformers==5.16.1" "peft==0.20.0" "trl==0.29.1" \
     "bitsandbytes==0.50.2" "accelerate==1.14.0" pytest
 python task/prepare_data.py                        # данные
-python -m pytest solution -q                       # наши кернелы против PyTorch
+python -m pytest solution -q                       # наши кернелы против PyTorch / bitsandbytes
 SOUP_APPLY_SOLUTION=1 python -m pytest tests -q    # 79 тестов Soup с нашими патчами
-python harness/run_task.py                         # база и решение → runs/result.json
+python harness/run_task.py --repeats 2             # база и решение → runs/result.json
 python harness/check_rules.py                      # проверки → runs/checks.json
 ```
 
@@ -120,28 +137,40 @@ python harness/check_rules.py                      # проверки → runs/c
 
 ## 🧪 Тесты
 
-| Набор | Что проверяет |
+| Файл | Что проверяет |
 |---|---|
-| [`solution/test_head_loss.py`](./solution/test_head_loss.py) | loss, градиент, энтропия, loss по токенам, точность — против PyTorch; разные формы, паддинг, первый максимум в argmax |
-| [`solution/test_kernels.py`](./solution/test_kernels.py) | пример SwiGLU от организаторов |
+| [`test_head_loss.py`](./solution/test_head_loss.py) | loss, градиент, энтропия, loss по токенам, точность против PyTorch; паддинг; первый максимум в argmax |
+| [`test_nf4.py`](./solution/test_nf4.py) | распаковка NF4 и 4-битный слой против самого bitsandbytes (forward и градиент) |
+| [`test_rmsnorm.py`](./solution/test_rmsnorm.py) | RMSNorm fp32/fp16 против формулы Qwen2, forward и градиент |
+| [`test_rope.py`](./solution/test_rope.py) | пролог LoRA + RoPE + каст против операций Qwen2, forward и оба градиента |
+| [`test_unpad.py`](./solution/test_unpad.py) | упакованный forward/backward крошечной Qwen2 против обычного; те же маски dropout |
+| [`test_mlp.py`](./solution/test_mlp.py) | MLP с пересчётом против обычного пути на настоящих NF4-слоях |
+| [`test_tied_embedding.py`](./solution/test_tied_embedding.py) | fp16-эмбеддинги: поиск совпадает бит в бит, связь с LM head сохраняется |
 | [`tests/`](./tests) | 79 регрессионных тестов Soup с нашими патчами |
 
 ---
 
 ## ⚠️ Ограничения (честно)
 
-- ⏳ Заполняется по итогам прогонов: где решение слабее, что не получилось.
-- Метрики TRL и `rewind.jsonl` считаются из fp32-статистик кернела, а база — из fp16-логитов: возможны расхождения в десятитысячных (допуск правил — 3%).
+- **≈ 19 с из 55 — не наши:** импорт библиотек (~13 с), загрузка 4-битной модели (~3 с), подготовка данных и сохранение. Кернелами это не ускорить, поэтому общее ускорение (1,5×) меньше ускорения самого цикла обучения (1,73×).
+- **Первый шаг** у нас ~2,8 с против ~1,2 с у базы: первая загрузка CUDA/cuBLAS-кернелов под новые формы. Устранить не удалось.
+- **Матричные умножения** остаются на cuBLAS: свой Triton-GEMM с распаковкой NF4 на T4 (Turing) мы не делали — риск проиграть cuBLAS по скорости.
+- **Пол памяти ~1,6 ГБ** — сами 4-битные веса, fp16-эмбеддинги и контекст CUDA. Ниже можно только выгрузкой в RAM или полным пересчётом слоёв, а это стоит скорости.
+- Удаление паддинга рассчитано на обычный паддинг (реальные токены строки идут подряд); иначе внимание идёт прежним путём на развёрнутом батче.
+- Рассчитано на Qwen2 + bitsandbytes NF4 с двойным квантованием + fp16 (конфиг задачи); в других случаях патчи передают управление исходному коду.
 
 ---
 
 ## 📚 Источники идей
 
 - E. Wijmans et al., *Cut Your Losses in Large-Vocabulary Language Models* (2024) — не материализовать логиты большого словаря.
-- [Liger-Kernel](https://github.com/linkedin/Liger-Kernel): fused linear cross-entropy по кускам — идея, код не использовался.
+- [Liger-Kernel](https://github.com/linkedin/Liger-Kernel): fused linear cross-entropy и fused RMSNorm — идеи, код не использовался.
 - M. Milakov, N. Gimelshein, *Online normalizer calculation for softmax* (2018) — online log-sum-exp.
+- T. Dettmers et al., *QLoRA* (2023) — формат NF4 и двойное квантование.
+- J. Su et al., *RoFormer* (2021) — rotary embedding.
+- [Unsloth](https://unsloth.ai/blog/long-context) и [Axolotl LoRA optimizations](https://docs.axolotl.ai/docs/lora_optims.html) — идея сливать LoRA с соседними операциями и пересчитывать активации в своём коде.
 
-Код кернелов написан с нуля. Готовые кернел-библиотеки не используются (проверка 2).
+Весь код кернелов написан с нуля. Готовые кернел-библиотеки не используются (проверка 2).
 
 ---
 
@@ -174,24 +203,33 @@ Apache-2.0, см. [`LICENSE`](./LICENSE) и [`NOTICE`](./NOTICE). Шаблон, 
 
 ### 💡 Қысқаша
 
-`soup train` бір Kaggle T4-те **Qwen2.5-1.5B-Instruct** моделін (NF4 салмақтары, LoRA r=16) 256 қазақша нұсқаулықта оқытады: базада шамамен 80 с және 14,35 ГБ бейнежад. Біздің Triton-кернелдеріміз Soup-қа бір `solution.apply()` функциясымен қосылады: сол тапсырма, сол сападағы сол адаптер — бірақ жад пен уақыт азырақ.
+`soup train` бір Kaggle T4-те **Qwen2.5-1.5B-Instruct** моделін (NF4 салмақтары, LoRA r=16) қазақ тіліндегі 256 нұсқаулықта оқытады: базада ≈ 84 с және 14,3 ГБ бейнежад. Біздің Triton-кернелдеріміз Soup-қа бір `solution.apply()` функциясымен, Soup-тың бірде-бір кірістірілген режимінсіз қосылады: **сол оқыту ≈ 1,5× жылдам және ≈ 4,3× аз жад алады (3,3 ГБ — 4 ГБ бейнекартаға да сыяды)**, ал метрикалар базамен оның өз іске қосулары арасындағы шашырау шегінде сәйкес келеді.
 
-### 📊 Нәтижелер
+### 📊 Нәтижелер (Kaggle T4, әр тарап 2 рет іске қосылды)
 
-Кесте [жоғарыда](#-результаты), әр Kaggle T4 іске қосуынан кейін жаңартылады.
+| | База | MindStream AI | Қатынас |
+|---|---|---|---|
+| `soup train` уақыты | 83,5 с | **55,5 с** | **≈ 1,50×** |
+| GPU жадының шыңы | 14 345 МиБ | **3 329 МиБ** | **≈ 4,31×** |
+| Адаптердің eval loss-ы | 2,04966 | 2,04962 | −0,002 % |
+
+`check_rules.py`-дің барлық 10 тексерісі — PASS. Дәлдік есебі [жоғарыда](#-отчёт-о-точности-результат-обучения-не-изменился): біздің базадан айырмашылығымыз базаның өзінің қайта іске қосулар арасындағы шашырауымен бірдей.
 
 ### ⚙️ Не істелді
 
-1. **151 936 токендік сөздік бойынша біріктірілген cross-entropy** ([`solution/head_loss.py`](./solution/head_loss.py)). Толық логиттер ешқашан жадта сақталмайды: токендер 512-ден бөлікпен өңделеді, бір Triton өтімі log-sum-exp, мақсат логиті, энтропия мен argmax есептейді және градиентті сол жерде жазады. Loss, TRL энтропиясы мен дәлдігі және Soup-тың `rewind.jsonl` журналы бір өтімнен алынады.
-2. **Ұйымдастырушылардың SwiGLU мысалы** қосулы қалды (~2 ГБ үнемдейді), бірақ біздің кернел болып саналмайды.
+- **Біріктірілген cross-entropy** (`head_loss.py`): 151 936 токендік сөздік бойынша толық логиттер жадта сақталмайды; loss, энтропия, дәлдік және rewind жолдарының loss-ы бір өтімнен алынады.
+- **NF4 салмақтарын ашу** (`nf4.py`), **RMSNorm** (`rmsnorm.py`), **LoRA + RoPE + fp16 бір өтімде** (`rope.py`) — өз Triton-кернелдеріміз.
+- **Батч ішіндегі padding-ті алып тастау** (`unpad.py`), **fp16 эмбеддингтер биттен битке** (`tied_embedding.py`), **MLP-да fp16 және үлкен батчтарда қайта есептеу** (`mlp.py`).
+
+Толығырақ — [орысша бөлімде](#kernels).
 
 ### 🚀 Іске қосу
 
-Kaggle: [`templates/kaggle_notebook.ipynb`](./templates/kaggle_notebook.ipynb) импорттаңыз → GPU T4 x2, Internet On → бірінші ұяшыққа `REPO_URL` → **Run All** (~10 минут). Жергілікті командалар [жоғарыда](#-как-запустить).
+Kaggle: [`templates/kaggle_notebook.ipynb`](./templates/kaggle_notebook.ipynb) импорттаңыз → GPU T4 x2, Internet On → бірінші ұяшыққа `REPO_URL` және `COMMIT` → **Run All** (~10 минут). Жергілікті командалар [жоғарыда](#-как-запустить).
 
 ### 📚 Идеялар көздері
 
-Cut Cross-Entropy (Wijmans et al., 2024), Liger-Kernel fused linear cross-entropy идеясы, online softmax (Milakov & Gimelshein, 2018). Кернел коды нөлден жазылған.
+Cut Cross-Entropy (Wijmans et al., 2024), Liger-Kernel, online softmax (Milakov & Gimelshein, 2018), QLoRA (Dettmers et al., 2023), RoFormer (Su et al., 2021), Unsloth және Axolotl. Кернел коды нөлден жазылған.
 
 ### 👤 Команда
 
@@ -205,24 +243,33 @@ Cut Cross-Entropy (Wijmans et al., 2024), Liger-Kernel fused linear cross-entrop
 
 ### 💡 Summary
 
-`soup train` fine-tunes **Qwen2.5-1.5B-Instruct** (NF4 weights, LoRA r=16) on 256 Kazakh-language instructions on one Kaggle T4: about 80 s and 14.35 GB of GPU memory in the base run. Our Triton kernels plug into Soup through a single `solution.apply()`: the same task, the same adapter of the same quality, in less memory and time.
+`soup train` fine-tunes **Qwen2.5-1.5B-Instruct** (NF4 weights, LoRA r=16) on 256 Kazakh-language instructions on one Kaggle T4: ≈ 84 s and 14.3 GB of GPU memory in the base run. Our Triton kernels plug in through a single `solution.apply()`, without any of Soup's built-in modes: **the same training runs ≈ 1.5× faster in ≈ 4.3× less memory (3.3 GB — it fits even a 4 GB GPU)**, and the metrics match the base within the base's own run-to-run spread.
 
-### 📊 Results
+### 📊 Results (Kaggle T4, 2 runs per side, as the jury runs)
 
-See the [table above](#-результаты); it is updated after every Kaggle T4 run.
+| | Base | MindStream AI | Ratio |
+|---|---|---|---|
+| `soup train` time | 83.5 s | **55.5 s** | **≈ 1.50×** |
+| Peak GPU memory | 14,345 MiB | **3,329 MiB** | **≈ 4.31×** |
+| Adapter eval loss | 2.04966 | 2.04962 | −0.002 % |
+
+All 10 checks of `check_rules.py` pass. The accuracy report is [above](#-отчёт-о-точности-результат-обучения-не-изменился): our difference from the base is the same size as the base's difference from itself between runs (loss 0.012 % vs 0.009 % mean per step).
 
 ### ⚙️ What we built
 
-1. **Fused cross-entropy over the 151,936-token vocabulary** ([`solution/head_loss.py`](./solution/head_loss.py)). The full logits are never kept: tokens go in chunks of 512, one Triton pass computes log-sum-exp, the target logit, entropy and argmax and writes the gradient in place. The loss, TRL's entropy and token accuracy, and Soup's `rewind.jsonl` per-row losses all come from that single pass, with TRL 0.29.1 and Soup 0.77.0 formulas unchanged.
-2. **The organizers' SwiGLU example** stays on (~2 GB saved); it does not count as our kernel.
+- **Fused LM-head cross-entropy** (`head_loss.py`): the logits over the 151,936-token vocabulary never exist in full; loss, entropy, accuracy and rewind row losses come from one pass.
+- **NF4 dequantization** (`nf4.py`), **RMSNorm** (`rmsnorm.py`), **LoRA + rotary + fp16 cast in one pass** (`rope.py`) — our Triton kernels, forward and backward.
+- **Padding removed inside each batch** (`unpad.py`, same dropout masks as the base), **bit-exact fp16 tied embedding** (`tied_embedding.py`), **fp16 MLP intermediates and recomputation for large batches only** (`mlp.py`).
+
+Details are in the [Russian section](#kernels).
 
 ### 🚀 How to run
 
-Kaggle: import [`templates/kaggle_notebook.ipynb`](./templates/kaggle_notebook.ipynb) → GPU T4 x2, Internet On → set `REPO_URL` in the first cell → **Run All** (~10 minutes). Local commands are [above](#-как-запустить).
+Kaggle: import [`templates/kaggle_notebook.ipynb`](./templates/kaggle_notebook.ipynb) → GPU T4 x2, Internet On → set `REPO_URL` and `COMMIT` in the first cell → **Run All** (~10 minutes). Local commands are [above](#-как-запустить).
 
 ### 📚 Sources of ideas
 
-Cut Cross-Entropy (Wijmans et al., 2024), the chunked fused linear cross-entropy idea of Liger-Kernel, online softmax (Milakov & Gimelshein, 2018). The kernel code is written from scratch.
+Cut Cross-Entropy (Wijmans et al., 2024), Liger-Kernel, online softmax (Milakov & Gimelshein, 2018), QLoRA (Dettmers et al., 2023), RoFormer (Su et al., 2021), Unsloth and Axolotl. The kernel code is written from scratch.
 
 ### 👤 Team
 
