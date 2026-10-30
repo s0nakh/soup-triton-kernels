@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<title>MindStream AI</title>
+<defs><linearGradient id="ms-stream" gradientUnits="userSpaceOnUse" x1="220" y1="0" x2="430" y2="0">
+<stop offset="0" stop-color="#7C3AED"/><stop offset="1" stop-color="#0EA5E9"/></linearGradient></defs>
+<g fill="none" stroke-width="20" stroke-linecap="round" stroke-linejoin="round">
+<g stroke="#7C3AED">
+<path d="M 206 332 H 152 A 46 46 0 0 1 112 262 A 48 48 0 0 1 132 190 A 50 50 0 0 1 206 160 A 50 50 0 0 1 282 186"/>
+<path d="M 156 222 C 184 222 198 238 198 262"/>
+<path d="M 236 196 C 236 216 224 228 204 230"/>
+</g>
+<g stroke="url(#ms-stream)">
+<path d="M 246 236 H 326 L 356 208 H 388"/>
+<path d="M 226 274 H 388"/>
+<path d="M 240 312 H 326 L 356 340 H 388"/>
+<circle cx="410" cy="208" r="16"/><circle cx="410" cy="274" r="16"/><circle cx="410" cy="340" r="16"/>
+</g></g>
+</svg>
