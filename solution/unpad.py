@@ -23,6 +23,7 @@ class Pack:
     index: torch.Tensor  # (n_real,) positions of the real tokens in the flattened (batch * seq)
     batch: int
     seq: int
+    lengths: tuple = ()  # real tokens per row when each row's tokens are contiguous, else ()
 
     @property
     def n_real(self):
@@ -49,7 +50,20 @@ def make_pack(attention_mask):
     if index.numel() == keep.numel() or index.numel() == 0:
         return None
     batch, seq = attention_mask.shape
-    return Pack(index=index, batch=batch, seq=seq)
+    return Pack(index=index, batch=batch, seq=seq, lengths=_contiguous_lengths(attention_mask))
+
+
+def _contiguous_lengths(attention_mask):
+    """Real tokens per row if every row's real tokens form one contiguous block (right or left
+    padding), else (). One host sync per forward."""
+    mask = attention_mask != 0
+    lengths = mask.sum(dim=1)
+    first = mask.int().argmax(dim=1)
+    positions = torch.arange(mask.shape[1], device=mask.device)
+    block = (positions >= first[:, None]) & (positions < (first + lengths)[:, None])
+    if not bool(torch.equal(block, mask)) or bool((lengths == 0).any()):
+        return ()
+    return tuple(int(n) for n in lengths.tolist())
 
 
 def active_pack():
@@ -78,6 +92,23 @@ def _packed_rotary(pack, position_embeddings):
     if not _is_padded(pack, cos.expand(pack.batch, *cos.shape[1:])):
         return None
     return tuple(pack.pack(t.expand(pack.batch, *t.shape[1:])) for t in (cos, sin))
+
+
+def _attention_per_row(module, pack, query, key, value):
+    """Causal attention row by row on the packed tokens: each row's real tokens are contiguous,
+    so a plain causal mask on its own block is exactly the base's causal + padding mask for the
+    real positions, with no work on padding and no copies into the padded layout."""
+    from transformers.models.qwen2.modeling_qwen2 import repeat_kv
+
+    groups = module.num_key_value_groups
+    outputs, start = [], 0
+    for length in pack.lengths:
+        rows = slice(start, start + length)
+        outputs.append(torch.nn.functional.scaled_dot_product_attention(
+            query[:, :, rows], repeat_kv(key[:, :, rows], groups),
+            repeat_kv(value[:, :, rows], groups), is_causal=True, scale=module.scaling))
+        start += length
+    return torch.cat(outputs, dim=2)
 
 
 def patch_qwen2_unpadded():
@@ -112,6 +143,10 @@ def patch_qwen2_unpadded():
         key = self.k_proj(hidden_states).view(shape).transpose(1, 2)
         value = self.v_proj(hidden_states).view(shape).transpose(1, 2)
         query, key = modeling_qwen2.apply_rotary_pos_emb(query, key, *rotary)
+
+        if pack.lengths and self.sliding_window is None and getattr(self, "is_causal", True):
+            output = _attention_per_row(self, pack, query, key, value)
+            return self.o_proj(output.transpose(1, 2).reshape(1, pack.n_real, -1)), None
 
         def padded(states):  # (1, heads, n_real, dim) -> (batch, heads, seq, dim)
             return pack.unpack(states.transpose(1, 2)).transpose(1, 2)
