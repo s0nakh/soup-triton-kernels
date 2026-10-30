@@ -36,7 +36,17 @@
 
 ## 💡 Коротко
 
-`soup train` дообучает **Qwen2.5-1.5B-Instruct** (веса NF4, LoRA r=16) на 256 инструкциях на казахском языке на одной Kaggle T4. В базе это ≈ 84 с и 14,3 ГБ видеопамяти — почти вся карта. Наши Triton-кернелы подключаются одной функцией `solution.apply()`, без единого встроенного режима Soup: **то же обучение идёт ≈ 1,5× быстрее и занимает ≈ 4,3× меньше памяти (3,3 ГБ — помещается даже в видеокарту на 4 ГБ)**, а метрики совпадают с базой в пределах её собственного разброса между запусками.
+`soup train` дообучает **Qwen2.5-1.5B-Instruct** (веса NF4, LoRA r=16) на 256 инструкциях на казахском языке на одной Kaggle T4. В базе это ≈ 84 с и 14,3 ГБ видеопамяти — почти вся карта. Наши Triton-кернелы подключаются одной функцией `solution.apply()`, без единого встроенного режима Soup: **то же обучение идёт ≈ 1,5× быстрее и занимает ≈ 4,3× меньше памяти (3,3 ГБ — помещается даже в видеокарту на 4 ГБ: проверено с лимитом памяти на T4)**, а метрики совпадают с базой в пределах её собственного разброса между запусками.
+
+### 🎯 Критерии кейса → где доказательство
+
+| Критерий | Баллы | Наш результат и где проверить |
+|---|---|---|
+| Допуск: все 10 проверок `harness/check_rules.py` | 20 | **ALL CHECKS PASSED** в [публичном ноутбуке Kaggle](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) (коммит `b1c97d9`) |
+| Скорость `soup train`, s | 35·ln s / ln s_best | **1,49×** в ноутбуке, **1,50×** в среднем 2 прогонов — [Результаты](#-результаты) |
+| Память GPU, m | 30·ln m / ln m_best | **4,31×**: 14 345 → 3 329 МиБ, проверено и с лимитом 3 ГБ — [Результаты](#-результаты) |
+| README: что сделано и откуда идеи, как запустить, результаты и ограничения | 15 | [Что сделано](#️-что-сделано) · [Источники идей](#-источники-идей) · [Как запустить](#-как-запустить) · [Ограничения](#️-ограничения-честно) |
+| Качество не хуже базы (eval loss ≤ +0,5 %) | условие допуска | **−0,002 %** и [отчёт о точности по каждому шагу](#-отчёт-о-точности-результат-обучения-не-изменился) |
 
 ---
 
@@ -55,6 +65,10 @@
 **Все 10 проверок `check_rules.py` — PASS.** 31 наш тест кернелов и 79 регрессионных тестов Soup проходят. Разброс замеров на T4 между прогонами — 1–4 %, поэтому округляем: **≈ 1,5× быстрее, ≈ 4,3× меньше памяти**.
 
 📓 **Публичный ноутбук Kaggle** по шаблону организаторов (`COMMIT = "b1c97d9"`, по 1 запуску на сторону): [сохранённая версия](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) — база 95,7 с → **64,1 с (1,49×)**, 14 345 → **3 329 МиБ (4,31×)**, eval loss 2,04969 → 2,04965 (−0,002 %), доля наших кернелов 10,1 %, **ALL CHECKS PASSED**. Секунды на этой машине Kaggle больше, а отношения те же.
+
+🎬 [Демо-видео (2:52)](https://youtu.be/fNUtKUW9vSs) · 📑 [Презентация (PDF)](https://drive.google.com/file/d/1kJC7frksNmOO7wqf6DHUjxd_cLn_TOz8/view?usp=sharing)
+
+🧪 **Проверка «помещается в 4 ГБ».** На той же T4 обучение запущено с жёстким лимитом памяти PyTorch (`torch.cuda.set_per_process_memory_fraction`, без изменений в коде решения): с лимитом **3 500 МиБ** и даже **3 072 МиБ** оно проходит без нехватки памяти, eval loss тот же (2,04964–2,04966), весь процесс по nvidia-smi — 3,2–3,3 ГБ. Это эмуляция маленькой карты на T4, на физической карте 4 ГБ мы не запускали.
 
 ### 🎯 Отчёт о точности: результат обучения не изменился
 
@@ -157,6 +171,7 @@ python harness/check_rules.py                      # проверки → runs/c
 - **≈ 19 с из 55 — не наши:** импорт библиотек (~13 с), загрузка 4-битной модели (~3 с), подготовка данных и сохранение. Кернелами это не ускорить, поэтому общее ускорение (1,5×) меньше ускорения самого цикла обучения (1,73×).
 - **Первый шаг** у нас ~2,8 с против ~1,2 с у базы: первая загрузка CUDA/cuBLAS-кернелов под новые формы. Устранить не удалось.
 - **Матричные умножения** остаются на cuBLAS: свой Triton-GEMM с распаковкой NF4 на T4 (Turing) мы не делали — риск проиграть cuBLAS по скорости.
+- **«Помещается в 4 ГБ»** проверено эмуляцией — жёстким лимитом памяти PyTorch на той же T4 (3 500 и 3 072 МиБ); на физической карте 4 ГБ не запускали.
 - **Пол памяти ~1,6 ГБ** — сами 4-битные веса, fp16-эмбеддинги и контекст CUDA. Ниже можно только выгрузкой в RAM или полным пересчётом слоёв, а это стоит скорости.
 - Удаление паддинга рассчитано на обычный паддинг (реальные токены строки идут подряд); иначе внимание идёт прежним путём на развёрнутом батче.
 - Рассчитано на Qwen2 + bitsandbytes NF4 с двойным квантованием + fp16 (конфиг задачи); в других случаях патчи передают управление исходному коду.
@@ -191,7 +206,7 @@ python harness/check_rules.py                      # проверки → runs/c
 
 **MindStream AI** — соло-участник: **Sonia Akhsen**, капитан команды · Актау
 
-Разработка велась с AI-ассистентом [Claude Code](https://claude.com/claude-code). Озвучка демо-видео — [ElevenLabs](https://elevenlabs.io) (бесплатный тариф), голос Victoriya Voloshina — Curious Educator.
+Разработка велась с AI-ассистентом [Claude Code](https://claude.com/claude-code). Озвучка демо-видео — [ElevenLabs](https://elevenlabs.io) (бесплатный тариф), голос Victoriya Voloshina — Curious Educator. Слайды презентации сгенерированы в Google NotebookLM (Gemini) по нашему тексту; цифры на них проверены и исправлены вручную.
 
 ## 📄 Лицензия
 
@@ -215,7 +230,7 @@ Apache-2.0, см. [`LICENSE`](./LICENSE) и [`NOTICE`](./NOTICE). Шаблон, 
 | GPU жадының шыңы | 14 345 МиБ | **3 329 МиБ** | **≈ 4,31×** |
 | Адаптердің eval loss-ы | 2,04966 | 2,04962 | −0,002 % |
 
-`check_rules.py`-дің барлық 10 тексерісі — PASS. Ұйымдастырушылар үлгісі бойынша жария Kaggle ноутбугы: [сақталған нұсқа](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) — 95,7 с → 64,1 с (1,49×), 14 345 → 3 329 МиБ (4,31×), ALL CHECKS PASSED. Дәлдік есебі [жоғарыда](#-отчёт-о-точности-результат-обучения-не-изменился): біздің базадан айырмашылығымыз базаның өзінің қайта іске қосулар арасындағы шашырауымен бірдей.
+`check_rules.py`-дің барлық 10 тексерісі — PASS. Ұйымдастырушылар үлгісі бойынша жария Kaggle ноутбугы: [сақталған нұсқа](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) — 95,7 с → 64,1 с (1,49×), 14 345 → 3 329 МиБ (4,31×), ALL CHECKS PASSED. 🎬 [Демо-бейне](https://youtu.be/fNUtKUW9vSs) · 📑 [Презентация](https://drive.google.com/file/d/1kJC7frksNmOO7wqf6DHUjxd_cLn_TOz8/view?usp=sharing). Жад шегі тексерілді: сол T4-те PyTorch жадына қатаң шек қойылғанда (3 500 және 3 072 МиБ) оқыту жадсыз қалмай өтеді, eval loss өзгермейді (физикалық 4 ГБ картада іске қосылмаған, бұл T4-тегі эмуляция). Дәлдік есебі [жоғарыда](#-отчёт-о-точности-результат-обучения-не-изменился): біздің базадан айырмашылығымыз базаның өзінің қайта іске қосулар арасындағы шашырауымен бірдей.
 
 ### ⚙️ Не істелді
 
@@ -237,7 +252,7 @@ Cut Cross-Entropy (Wijmans et al., 2024), Liger-Kernel, online softmax (Milakov 
 
 **MindStream AI** — жеке қатысушы: **Sonia Akhsen**, команда капитаны · Ақтау
 
-Демо-бейненің дыбысы — [ElevenLabs](https://elevenlabs.io) (тегін тариф), Victoriya Voloshina — Curious Educator дауысы.
+Демо-бейненің дыбысы — [ElevenLabs](https://elevenlabs.io) (тегін тариф), Victoriya Voloshina — Curious Educator дауысы. Презентация слайдтары Google NotebookLM (Gemini) арқылы біздің мәтін бойынша жасалды, сандары қолмен тексерілді.
 
 </details>
 
@@ -257,7 +272,7 @@ Cut Cross-Entropy (Wijmans et al., 2024), Liger-Kernel, online softmax (Milakov 
 | Peak GPU memory | 14,345 MiB | **3,329 MiB** | **≈ 4.31×** |
 | Adapter eval loss | 2.04966 | 2.04962 | −0.002 % |
 
-All 10 checks of `check_rules.py` pass. Public Kaggle notebook from the organizers' template: [saved version](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) — 95.7 s → 64.1 s (1.49×), 14,345 → 3,329 MiB (4.31×), ALL CHECKS PASSED. The accuracy report is [above](#-отчёт-о-точности-результат-обучения-не-изменился): our difference from the base is the same size as the base's difference from itself between runs (loss 0.012 % vs 0.009 % mean per step).
+All 10 checks of `check_rules.py` pass. Public Kaggle notebook from the organizers' template: [saved version](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) — 95.7 s → 64.1 s (1.49×), 14,345 → 3,329 MiB (4.31×), ALL CHECKS PASSED. 🎬 [Demo video](https://youtu.be/fNUtKUW9vSs) · 📑 [Slides](https://drive.google.com/file/d/1kJC7frksNmOO7wqf6DHUjxd_cLn_TOz8/view?usp=sharing). Memory-limit check: on the same T4 with a hard PyTorch memory cap of 3,500 MiB and even 3,072 MiB, training runs without running out of memory and the eval loss is unchanged (emulated on the T4; not run on a physical 4 GB card). The accuracy report is [above](#-отчёт-о-точности-результат-обучения-не-изменился): our difference from the base is the same size as the base's difference from itself between runs (loss 0.012 % vs 0.009 % mean per step).
 
 ### ⚙️ What we built
 
@@ -279,6 +294,6 @@ Cut Cross-Entropy (Wijmans et al., 2024), Liger-Kernel, online softmax (Milakov 
 
 **MindStream AI** — solo participant: **Sonia Akhsen**, team captain · Aktau, Kazakhstan
 
-Demo video voiceover: [ElevenLabs](https://elevenlabs.io) (free plan), voice Victoriya Voloshina — Curious Educator.
+Demo video voiceover: [ElevenLabs](https://elevenlabs.io) (free plan), voice Victoriya Voloshina — Curious Educator. Presentation slides generated in Google NotebookLM (Gemini) from our text; the numbers on them were checked and corrected by hand.
 
 </details>

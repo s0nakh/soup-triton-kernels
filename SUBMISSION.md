@@ -5,8 +5,8 @@
   (the code; later commits only add links to this file and the README)
 - Public Kaggle notebook, the saved version (`COMMIT` in it = the sha above; the same link is in
   the README): https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217
-- Demo video (up to 3 minutes): ⏳ (voiceover: ElevenLabs free plan, voice Victoriya Voloshina — Curious Educator)
-- Presentation: ⏳
+- Demo video (up to 3 minutes): https://youtu.be/fNUtKUW9vSs (voiceover: ElevenLabs free plan, voice Victoriya Voloshina — Curious Educator)
+- Presentation: https://drive.google.com/file/d/1kJC7frksNmOO7wqf6DHUjxd_cLn_TOz8/view?usp=sharing (slides generated in Google NotebookLM (Gemini) from our text, numbers checked by hand)
 
 ## Team (up to 4 people)
 | Name | Role | GitHub | Kaggle | Contact (captain) |
@@ -44,6 +44,11 @@ The saved public notebook above (organizers' template, `COMMIT = "b1c97d9"`, 1 r
 | Own kernels, share of the training time | | 10.1 % | threshold 5 % |
 
 ALL CHECKS PASSED (10/10).
+
+Memory-limit check ("fits a 4 GB GPU"): on the same T4, `soup train` with our solution and a hard PyTorch
+memory cap (`torch.cuda.set_per_process_memory_fraction`, no change to the solution) of 3,500 MiB and of 3,072 MiB
+finished without running out of memory, eval loss 2.04966 / 2.04964, whole process 3,332 / 3,218 MiB by nvidia-smi.
+This emulates a small GPU on the T4; we did not run on a physical 4 GB card.
 
 Our development run with `harness/run_task.py --repeats 2` (2 runs per side, means):
 
