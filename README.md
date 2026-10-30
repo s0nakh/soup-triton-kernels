@@ -22,10 +22,14 @@
 </p>
 
 <p align="center">
-  <a href="#-kaggle">📓 Kaggle-ноутбук</a> |
+  <a href="https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217"><b>📓 Kaggle-ноутбук (10/10 PASS)</b></a> |
+  <a href="https://youtu.be/fNUtKUW9vSs"><b>🎬 Демо-видео</b></a> |
+  <a href="https://drive.google.com/file/d/1kJC7frksNmOO7wqf6DHUjxd_cLn_TOz8/view?usp=sharing"><b>📑 Презентация</b></a>
+  <br/>
   <a href="#-результаты">📊 Результаты</a> |
   <a href="#kernels">⚙️ Кернелы</a> |
-  <a href="#-как-запустить">🚀 Запуск</a>
+  <a href="#-как-запустить">🚀 Запуск</a> |
+  <a href="./SUBMISSION.md">📝 SUBMISSION</a>
 </p>
 
 <p align="center">
@@ -65,8 +69,6 @@
 **Все 10 проверок `check_rules.py` — PASS.** 31 наш тест кернелов и 79 регрессионных тестов Soup проходят. Разброс замеров на T4 между прогонами — 1–4 %, поэтому округляем: **≈ 1,5× быстрее, ≈ 4,3× меньше памяти**.
 
 📓 **Публичный ноутбук Kaggle** по шаблону организаторов (`COMMIT = "b1c97d9"`, по 1 запуску на сторону): [сохранённая версия](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) — база 95,7 с → **64,1 с (1,49×)**, 14 345 → **3 329 МиБ (4,31×)**, eval loss 2,04969 → 2,04965 (−0,002 %), доля наших кернелов 10,1 %, **ALL CHECKS PASSED**. Секунды на этой машине Kaggle больше, а отношения те же.
-
-🎬 [Демо-видео (2:52)](https://youtu.be/fNUtKUW9vSs) · 📑 [Презентация (PDF)](https://drive.google.com/file/d/1kJC7frksNmOO7wqf6DHUjxd_cLn_TOz8/view?usp=sharing)
 
 🧪 **Проверка «помещается в 4 ГБ».** На той же T4 обучение запущено с жёстким лимитом памяти PyTorch (`torch.cuda.set_per_process_memory_fraction`, без изменений в коде решения): с лимитом **3 500 МиБ** и даже **3 072 МиБ** оно проходит без нехватки памяти, eval loss тот же (2,04964–2,04966), весь процесс по nvidia-smi — 3,2–3,3 ГБ. Это эмуляция маленькой карты на T4, на физической карте 4 ГБ мы не запускали.
 
