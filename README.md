@@ -33,7 +33,7 @@
 
 ## 💡 Коротко
 
-`soup train` дообучает **Qwen2.5-1.5B-Instruct** (веса NF4, LoRA r=16) на 256 казахских инструкциях на одной Kaggle T4. В базе это около 80 с и около 14,35 ГБ видеопамяти. Наши Triton-кернелы подключаются к Soup одной функцией `solution.apply()`: та же задача, тот же адаптер того же качества — но меньше памяти и времени.
+`soup train` дообучает **Qwen2.5-1.5B-Instruct** (веса NF4, LoRA r=16) на 256 инструкциях на казахском языке на одной Kaggle T4. В базе это около 80 с и около 14,35 ГБ видеопамяти. Наши Triton-кернелы подключаются к Soup одной функцией `solution.apply()`: та же задача, тот же адаптер того же качества — но меньше памяти и времени.
 
 > **Статус:** идёт разработка (30–31 октября 2026). Цифры ниже обновляются после каждого прогона на Kaggle T4.
 
@@ -205,7 +205,7 @@ Cut Cross-Entropy (Wijmans et al., 2024), Liger-Kernel fused linear cross-entrop
 
 ### 💡 Summary
 
-`soup train` fine-tunes **Qwen2.5-1.5B-Instruct** (NF4 weights, LoRA r=16) on 256 Kazakh instructions on one Kaggle T4: about 80 s and 14.35 GB of GPU memory in the base run. Our Triton kernels plug into Soup through a single `solution.apply()`: the same task, the same adapter of the same quality, in less memory and time.
+`soup train` fine-tunes **Qwen2.5-1.5B-Instruct** (NF4 weights, LoRA r=16) on 256 Kazakh-language instructions on one Kaggle T4: about 80 s and 14.35 GB of GPU memory in the base run. Our Triton kernels plug into Soup through a single `solution.apply()`: the same task, the same adapter of the same quality, in less memory and time.
 
 ### 📊 Results
 
