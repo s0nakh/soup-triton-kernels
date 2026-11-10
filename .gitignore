@@ -6,3 +6,6 @@ __pycache__/
 .pytest_cache/
 .ipynb_checkpoints/
 .DS_Store
+
+# local reference materials (video, voiceover, slides), not published
+MindStream_demo/
