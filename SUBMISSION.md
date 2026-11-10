@@ -8,6 +8,9 @@
   (`eacdde2`; the code in `solution/` is unchanged since).
 - Public Kaggle notebook, the saved version (`COMMIT` in it = the sha above; the same link is in
   the README): https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217
+- After the hackathon (10.11.2026), version 5 of the same notebook ran from this public repository
+  (commit `ca77dcc`, same `solution/` code): https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=368085963
+  — 93.1 s → 58.8 s (1.58 x), 14,345 → 3,329 MiB (4.31 x), eval loss +0.002 %, ALL CHECKS PASSED.
 - Demo video (up to 3 minutes): https://youtu.be/fNUtKUW9vSs (voiceover: ElevenLabs free plan, voice Victoriya Voloshina — Curious Educator)
 - Presentation: https://drive.google.com/file/d/1kJC7frksNmOO7wqf6DHUjxd_cLn_TOz8/view?usp=sharing (slides generated in Google NotebookLM (Gemini) from our text, numbers checked by hand)
 

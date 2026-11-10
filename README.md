@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217"><b>📓 Kaggle-ноутбук (10/10 PASS)</b></a> |
+  <a href="https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=368085963"><b>📓 Kaggle-ноутбук (10/10 PASS)</b></a> |
   <a href="https://youtu.be/fNUtKUW9vSs"><b>🎬 Демо-видео</b></a> |
   <a href="https://drive.google.com/file/d/1kJC7frksNmOO7wqf6DHUjxd_cLn_TOz8/view?usp=sharing"><b>📑 Презентация</b></a>
   <br/>
@@ -48,7 +48,7 @@
 
 | Критерий | Баллы | Наш результат и где проверить |
 |---|---|---|
-| Допуск: все 10 проверок `harness/check_rules.py` | 20 | **ALL CHECKS PASSED** в [публичном ноутбуке Kaggle](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) (коммит `b1c97d9`) |
+| Допуск: все 10 проверок `harness/check_rules.py` | 20 | **ALL CHECKS PASSED** в [публичном ноутбуке Kaggle](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=368085963) (версия 5, этот репозиторий, коммит `ca77dcc`; на хакатоне — [версия 4](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217), коммит `b1c97d9`) |
 | Скорость `soup train`, s | 35·ln s / ln s_best | **1,49×** в ноутбуке, **1,50×** в среднем 2 прогонов — [Результаты](#-результаты) |
 | Память GPU, m | 30·ln m / ln m_best | **4,31×**: 14 345 → 3 329 МиБ, проверено и с лимитом 3 ГБ — [Результаты](#-результаты) |
 | README: что сделано и откуда идеи, как запустить, результаты и ограничения | 15 | [Что сделано](#️-что-сделано) · [Источники идей](#-источники-идей) · [Как запустить](#-как-запустить) · [Ограничения](#️-ограничения-честно) |
@@ -70,7 +70,9 @@
 
 **Все 10 проверок `check_rules.py` — PASS.** 31 наш тест кернелов и 79 регрессионных тестов Soup проходят. Разброс замеров на T4 между прогонами — 1–4 %, поэтому округляем: **≈ 1,5× быстрее, ≈ 4,3× меньше памяти**.
 
-📓 **Публичный ноутбук Kaggle** по шаблону организаторов (`COMMIT = "b1c97d9"`, по 1 запуску на сторону): [сохранённая версия](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) — база 95,7 с → **64,1 с (1,49×)**, 14 345 → **3 329 МиБ (4,31×)**, eval loss 2,04969 → 2,04965 (−0,002 %), доля наших кернелов 10,1 %, **ALL CHECKS PASSED**. Секунды на этой машине Kaggle больше, а отношения те же.
+📓 **Публичный ноутбук Kaggle** по шаблону организаторов, сдан на хакатон (`COMMIT = "b1c97d9"`, по 1 запуску на сторону): [версия 4](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) — база 95,7 с → **64,1 с (1,49×)**, 14 345 → **3 329 МиБ (4,31×)**, eval loss 2,04969 → 2,04965 (−0,002 %), доля наших кернелов 10,1 %, **ALL CHECKS PASSED**. Секунды на этой машине Kaggle больше, а отношения те же.
+
+📓 **Повторный запуск из этого публичного репозитория** (10.11.2026, коммит `ca77dcc`, код `solution/` тот же): [версия 5](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=368085963) — база 93,1 с → **58,8 с (1,58×)**, 14 345 → **3 329 МиБ (4,31×)**, eval loss 2,04966 → 2,0497 (+0,002 %), доля наших кернелов 10,5 %, **ALL CHECKS PASSED**. Его можно открыть и запустить (**Copy & Edit → Run All**) без токенов.
 
 🧪 **Проверка «помещается в 4 ГБ».** На той же T4 обучение запущено с жёстким лимитом памяти PyTorch (`torch.cuda.set_per_process_memory_fraction`, без изменений в коде решения): с лимитом **3 500 МиБ** и даже **3 072 МиБ** оно проходит без нехватки памяти, eval loss тот же (2,04964–2,04966), весь процесс по nvidia-smi — 3,2–3,3 ГБ. Это эмуляция маленькой карты на T4, на физической карте 4 ГБ мы не запускали.
 
@@ -139,7 +141,7 @@
 3. В первой ячейке: `REPO_URL = "https://github.com/s0nakh/soup-triton-kernels.git"`, `COMMIT = ""` (последняя версия).
 4. **Run All** (~10 минут): база и решение, `runs/result.json`, таблица проверок.
 
-📓 Публичный ноутбук с результатами: [www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) (и в [`SUBMISSION.md`](./SUBMISSION.md)).
+📓 Публичный ноутбук с результатами: [www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=368085963](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=368085963) (и в [`SUBMISSION.md`](./SUBMISSION.md)).
 
 **Локально (Linux + CUDA GPU):**
 
@@ -234,7 +236,7 @@ Apache-2.0, см. [`LICENSE`](./LICENSE) и [`NOTICE`](./NOTICE). Шаблон, 
 | GPU жадының шыңы | 14 345 МиБ | **3 329 МиБ** | **≈ 4,31×** |
 | Адаптердің eval loss-ы | 2,04966 | 2,04962 | −0,002 % |
 
-`check_rules.py`-дің барлық 10 тексерісі — PASS. Ұйымдастырушылар үлгісі бойынша жария Kaggle ноутбугы: [сақталған нұсқа](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) — 95,7 с → 64,1 с (1,49×), 14 345 → 3 329 МиБ (4,31×), ALL CHECKS PASSED. 🎬 [Демо-бейне](https://youtu.be/fNUtKUW9vSs) · 📑 [Презентация](https://drive.google.com/file/d/1kJC7frksNmOO7wqf6DHUjxd_cLn_TOz8/view?usp=sharing). Жад шегі тексерілді: сол T4-те PyTorch жадына қатаң шек қойылғанда (3 500 және 3 072 МиБ) оқыту жадсыз қалмай өтеді, eval loss өзгермейді (физикалық 4 ГБ картада іске қосылмаған, бұл T4-тегі эмуляция). Дәлдік есебі [жоғарыда](#-отчёт-о-точности-результат-обучения-не-изменился): біздің базадан айырмашылығымыз базаның өзінің қайта іске қосулар арасындағы шашырауымен бірдей.
+`check_rules.py`-дің барлық 10 тексерісі — PASS. Ұйымдастырушылар үлгісі бойынша жария Kaggle ноутбугы: [5-нұсқа](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=368085963) (осы жария репозиторийден, `ca77dcc`) — 93,1 с → 58,8 с (1,58×), 14 345 → 3 329 МиБ (4,31×), ALL CHECKS PASSED; хакатонға тапсырылған [4-нұсқа](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) — 95,7 с → 64,1 с (1,49×). 🎬 [Демо-бейне](https://youtu.be/fNUtKUW9vSs) · 📑 [Презентация](https://drive.google.com/file/d/1kJC7frksNmOO7wqf6DHUjxd_cLn_TOz8/view?usp=sharing). Жад шегі тексерілді: сол T4-те PyTorch жадына қатаң шек қойылғанда (3 500 және 3 072 МиБ) оқыту жадсыз қалмай өтеді, eval loss өзгермейді (физикалық 4 ГБ картада іске қосылмаған, бұл T4-тегі эмуляция). Дәлдік есебі [жоғарыда](#-отчёт-о-точности-результат-обучения-не-изменился): біздің базадан айырмашылығымыз базаның өзінің қайта іске қосулар арасындағы шашырауымен бірдей.
 
 ### ⚙️ Не істелді
 
@@ -276,7 +278,7 @@ Cut Cross-Entropy (Wijmans et al., 2024), Liger-Kernel, online softmax (Milakov 
 | Peak GPU memory | 14,345 MiB | **3,329 MiB** | **≈ 4.31×** |
 | Adapter eval loss | 2.04966 | 2.04962 | −0.002 % |
 
-All 10 checks of `check_rules.py` pass. Public Kaggle notebook from the organizers' template: [saved version](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) — 95.7 s → 64.1 s (1.49×), 14,345 → 3,329 MiB (4.31×), ALL CHECKS PASSED. 🎬 [Demo video](https://youtu.be/fNUtKUW9vSs) · 📑 [Slides](https://drive.google.com/file/d/1kJC7frksNmOO7wqf6DHUjxd_cLn_TOz8/view?usp=sharing). Memory-limit check: on the same T4 with a hard PyTorch memory cap of 3,500 MiB and even 3,072 MiB, training runs without running out of memory and the eval loss is unchanged (emulated on the T4; not run on a physical 4 GB card). The accuracy report is [above](#-отчёт-о-точности-результат-обучения-не-изменился): our difference from the base is the same size as the base's difference from itself between runs (loss 0.012 % vs 0.009 % mean per step).
+All 10 checks of `check_rules.py` pass. Public Kaggle notebook from the organizers' template: [version 5](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=368085963) (run from this public repository, `ca77dcc`) — 93.1 s → 58.8 s (1.58×), 14,345 → 3,329 MiB (4.31×), ALL CHECKS PASSED; the [version 4](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) submitted at the hackathon — 95.7 s → 64.1 s (1.49×). 🎬 [Demo video](https://youtu.be/fNUtKUW9vSs) · 📑 [Slides](https://drive.google.com/file/d/1kJC7frksNmOO7wqf6DHUjxd_cLn_TOz8/view?usp=sharing). Memory-limit check: on the same T4 with a hard PyTorch memory cap of 3,500 MiB and even 3,072 MiB, training runs without running out of memory and the eval loss is unchanged (emulated on the T4; not run on a physical 4 GB card). The accuracy report is [above](#-отчёт-о-точности-результат-обучения-не-изменился): our difference from the base is the same size as the base's difference from itself between runs (loss 0.012 % vs 0.009 % mean per step).
 
 ### ⚙️ What we built
 
