@@ -4,6 +4,8 @@
 - Repository, final commit: https://github.com/BAITC-Hacks/hack-65172d00-mindstream-ai/commit/b1c97d9ca02276b955732f38699bc868ccf8d3d1
   (the code; later commits only add links to this file and the README). That team repository was private to
   the hackathon; this public repository is its copy with the full history, so commit hashes differ.
+  The same commit here: https://github.com/s0nakh/soup-triton-kernels/commit/eacdde26cb961f462119f846a4097bc7046bf382
+  (`eacdde2`; the code in `solution/` is unchanged since).
 - Public Kaggle notebook, the saved version (`COMMIT` in it = the sha above; the same link is in
   the README): https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217
 - Demo video (up to 3 minutes): https://youtu.be/fNUtKUW9vSs (voiceover: ElevenLabs free plan, voice Victoriya Voloshina — Curious Educator)
