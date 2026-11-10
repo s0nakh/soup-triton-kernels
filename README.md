@@ -6,6 +6,8 @@
   <em>То же обучение Qwen2.5-1.5B на бесплатной Kaggle T4: ≈1,5× быстрее, ≈4,3× меньше памяти, тот же результат</em>
 </p>
 
+> **Decentrathon 6.0 · Soup Kernel Challenge** (30–31 октября 2026, соло): свои Triton-кернелы для дообучения LLM на Kaggle T4 — 1,49× быстрее, 4,31× меньше памяти GPU, 10/10 проверок организаторов. Это публичная копия командного репозитория хакатона со всей историей разработки.
+
 <p align="center">
   <img src="https://img.shields.io/badge/Decentrathon-6.0-7C3AED?style=for-the-badge" alt="Decentrathon 6.0" />
   <img src="https://img.shields.io/badge/Case-Soup_Kernel_Challenge-0EA5E9?style=for-the-badge" alt="Soup Kernel Challenge" />
@@ -133,8 +135,8 @@
 **Kaggle (так проверяет жюри):**
 
 1. Kaggle → **Create → New Notebook → File → Import Notebook** → [`templates/kaggle_notebook.ipynb`](./templates/kaggle_notebook.ipynb).
-2. Справа: **Accelerator: GPU T4 x2**, **Internet: On**. Для приватного репозитория — секрет `GITHUB_TOKEN` (Add-ons → Secrets).
-3. В первой ячейке: `REPO_URL = "https://github.com/BAITC-Hacks/hack-65172d00-mindstream-ai.git"`, `COMMIT = "<финальный коммит из SUBMISSION.md>"`.
+2. Справа: **Accelerator: GPU T4 x2**, **Internet: On**. Репозиторий публичный, токен не нужен.
+3. В первой ячейке: `REPO_URL = "https://github.com/s0nakh/soup-triton-kernels.git"`, `COMMIT = ""` (последняя версия).
 4. **Run All** (~10 минут): база и решение, `runs/result.json`, таблица проверок.
 
 📓 Публичный ноутбук с результатами: [www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217](https://www.kaggle.com/code/sophieda/mindstream-soup-kernels?scriptVersionId=363824217) (и в [`SUBMISSION.md`](./SUBMISSION.md)).
