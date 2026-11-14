@@ -6,7 +6,7 @@
   <em>То же обучение Qwen2.5-1.5B на бесплатной Kaggle T4: ≈1,5× быстрее, ≈4,3× меньше памяти, тот же результат</em>
 </p>
 
-> **Decentrathon 6.0 · Soup Kernel Challenge** (30–31 октября 2026, соло): свои Triton-кернелы для дообучения LLM на Kaggle T4 — 1,49× быстрее, 4,31× меньше памяти GPU, 10/10 проверок организаторов. Это публичная копия командного репозитория хакатона со всей историей разработки.
+> **Decentrathon 6.0 · Soup Kernel Challenge** (30–31 октября 2026, соло): свои Triton-кернелы для дообучения LLM на Kaggle T4 — 1,49× быстрее, 4,31× меньше памяти GPU, 10/10 проверок организаторов. **Итог: средняя оценка жюри 61,88 из 100, [сертификат участника](#-итог-хакатона)** (трек AI Engineering by Soup, выдан 14.11.2026). Это публичная копия командного репозитория хакатона со всей историей разработки.
 
 <p align="center">
   <img src="https://img.shields.io/badge/Decentrathon-6.0-7C3AED?style=for-the-badge" alt="Decentrathon 6.0" />
@@ -31,7 +31,8 @@
   <a href="#-результаты">📊 Результаты</a> |
   <a href="#kernels">⚙️ Кернелы</a> |
   <a href="#-как-запустить">🚀 Запуск</a> |
-  <a href="./SUBMISSION.md">📝 SUBMISSION</a>
+  <a href="./SUBMISSION.md">📝 SUBMISSION</a> |
+  <a href="#-итог-хакатона">🏅 Сертификат</a>
 </p>
 
 <p align="center">
@@ -212,6 +213,18 @@ python harness/check_rules.py                      # проверки → runs/c
 
 **MindStream AI** — соло-участник: **Sonia Akhsen**, капитан команды · Актау
 
+### 🏅 Итог хакатона
+
+| Средняя оценка жюри | Сертификат | Трек | Выдан |
+|:---:|:---:|:---:|:---:|
+| **61,88 / 100** | участника Decentrathon 6.0 | AI Engineering by Soup | 14.11.2026 |
+
+<p align="center">
+  <a href="./assets/decentrathon6-certificate.pdf"><img src="./assets/decentrathon6-certificate.png" alt="Сертификат участника Decentrathon 6.0" width="640"/></a>
+  <br/>
+  <sub>Нажмите на изображение, чтобы открыть PDF</sub>
+</p>
+
 Разработка велась с AI-ассистентом [Claude Code](https://claude.com/claude-code). Озвучка демо-видео — [ElevenLabs](https://elevenlabs.io) (бесплатный тариф), голос Victoriya Voloshina — Curious Educator. Слайды презентации сгенерированы в Google NotebookLM (Gemini) по нашему тексту; цифры на них проверены и исправлены вручную.
 
 ## 📄 Лицензия
@@ -258,6 +271,8 @@ Cut Cross-Entropy (Wijmans et al., 2024), Liger-Kernel, online softmax (Milakov 
 
 **MindStream AI** — жеке қатысушы: **Sonia Akhsen**, команда капитаны · Ақтау
 
+🏅 Хакатон қорытындысы: **әділқазылардың орташа бағасы 61,88 / 100**, Decentrathon 6.0 [**қатысушы сертификаты**](./assets/decentrathon6-certificate.pdf) (AI Engineering by Soup трегі, 14.11.2026).
+
 Демо-бейненің дыбысы — [ElevenLabs](https://elevenlabs.io) (тегін тариф), Victoriya Voloshina — Curious Educator дауысы. Презентация слайдтары Google NotebookLM (Gemini) арқылы біздің мәтін бойынша жасалды, сандары қолмен тексерілді.
 
 </details>
@@ -299,6 +314,8 @@ Cut Cross-Entropy (Wijmans et al., 2024), Liger-Kernel, online softmax (Milakov 
 ### 👤 Team
 
 **MindStream AI** — solo participant: **Sonia Akhsen**, team captain · Aktau, Kazakhstan
+
+🏅 Hackathon outcome: **average jury score 61.88 / 100**, Decentrathon 6.0 [**participant certificate**](./assets/decentrathon6-certificate.pdf) (AI Engineering by Soup track, 14 Nov 2026).
 
 Demo video voiceover: [ElevenLabs](https://elevenlabs.io) (free plan), voice Victoriya Voloshina — Curious Educator. Presentation slides generated in Google NotebookLM (Gemini) from our text; the numbers on them were checked and corrected by hand.
 

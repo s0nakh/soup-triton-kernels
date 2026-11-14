@@ -14,6 +14,9 @@
 - Demo video (up to 3 minutes): https://youtu.be/fNUtKUW9vSs (voiceover: ElevenLabs free plan, voice Victoriya Voloshina — Curious Educator)
 - Presentation: https://drive.google.com/file/d/1kJC7frksNmOO7wqf6DHUjxd_cLn_TOz8/view?usp=sharing (slides generated in Google NotebookLM (Gemini) from our text, numbers checked by hand)
 
+## Outcome
+Average jury score **61.88 / 100**; Decentrathon 6.0 [participant certificate](./assets/decentrathon6-certificate.pdf) (AI Engineering by Soup track, issued 14 Nov 2026).
+
 ## Team (up to 4 people)
 | Name | Role | GitHub | Kaggle | Contact (captain) |
 |---|---|---|---|---|
